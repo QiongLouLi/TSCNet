@@ -51,37 +51,30 @@ class series_decomp(nn.Module):
 
 
 def _same_pad_1d(x, k):
-    # 保持长度不变的 padding（左右尽量对称）
     pad_left = k // 2
     pad_right = k - 1 - pad_left
     return F.pad(x, (pad_left, pad_right), mode='reflect')
 
 class LearnableMovingAvg(nn.Module):
-    """
-    可学习的 1D 滑动平均（低通）:
-    mode='gaussian' : 用离散高斯核，学习 σ（连续可微，等价于“窗口长度”）
-    mode='free'     : 直接学习核权重，softmax 归一化，保证非负且和为1
-    share_across_channels: 是否跨通道共享同一核（True更稳、更省参）
-    """
+
     def __init__(self, kernel_size:int, C:int, mode:str='gaussian', share_across_channels:bool=True):
         super().__init__()
-        assert kernel_size >= 3, "kernel_size >= 3 更合理"
+        assert kernel_size >= 3, 
         self.K = kernel_size
         self.C = C
         self.mode = mode
         self.share = share_across_channels
 
         if mode == 'gaussian':
-            # 学习 σ（>0），初始化为 K/2
+        
             sigma0 = torch.tensor(float(kernel_size) / 2.0)
             self.log_sigma = nn.Parameter(torch.log(sigma0))  # sigma = softplus(log_sigma)
-            # 预定义网格（中心在 (K-1)/2）
+ 
             n = torch.arange(self.K).float()
             self.register_buffer('grid', n - (self.K - 1) / 2.0)  # [K]
         elif mode == 'free':
-            # 直接学习核权重（跨通道共享或每通道一套）
             Wshape = (1, 1, self.K) if self.share else (C, 1, self.K)
-            self.kernel_logits = nn.Parameter(torch.zeros(Wshape))  # softmax 后即为权重
+            self.kernel_logits = nn.Parameter(torch.zeros(Wshape)) 
         else:
             raise ValueError("mode must be 'gaussian' or 'free'")
 
@@ -89,11 +82,10 @@ class LearnableMovingAvg(nn.Module):
         if self.mode == 'gaussian':
             sigma = F.softplus(self.log_sigma) + 1e-6                   # >0
             g = torch.exp(-0.5 * (self.grid / sigma).pow(2))            # [K]
-            g = g / (g.sum() + 1e-8)                                    # 归一化，非负且和为1
-            # 共享核：形状 [1,1,K]；按通道使用 groups=C 的 depthwise 卷积
+            g = g / (g.sum() + 1e-8)                                    
+      
             return g.view(1, 1, self.K)
         else:
-            # free 模式：对最后一维做 softmax，保证非负、和为1
             k = F.softmax(self.kernel_logits, dim=-1)                    # [1,1,K] 或 [C,1,K]
             return k
 
@@ -104,16 +96,13 @@ class LearnableMovingAvg(nn.Module):
         B, L, C = x.shape
         k = self._build_kernel()                                        # [1,1,K] 或 [C,1,K]
 
-        # 准备输入为 [B,C,L]
         x_c = x.permute(0, 2, 1)                                        # [B,C,L]
         # same padding
         x_p = _same_pad_1d(x_c, self.K)                                 # [B,C,L+K-1]
 
         if self.mode == 'gaussian' or self.share:
-            # 跨通道共享核：用 groups=C 的 depthwise 卷积
             k_exp = k.expand(C, 1, self.K).contiguous()                 # [C,1,K]
         else:
-            # 每通道一套核（free模式）
             k_exp = k                                                   # [C,1,K]
 
         trend = F.conv1d(x_p, k_exp, bias=None, stride=1, padding=0, groups=C)  # [B,C,L]
@@ -121,19 +110,13 @@ class LearnableMovingAvg(nn.Module):
         return trend
 
 class series_decomp_learnable(nn.Module):
-    """
-    用 LearnableMovingAvg 实现的可学习序列分解：
-    x = trend + residual，其中 trend 为可学习低通滤波输出。
-    """
+
     def __init__(self, kernel_size:int, C:int, mode:str='gaussian', share_across_channels:bool=True):
         super().__init__()
         self.moving_avg = LearnableMovingAvg(kernel_size, C, mode, share_across_channels)
 
     def forward(self, x):
-        """
-        x: [B, L, C]
-        returns: res, trend  (与原 series_decomp 接口保持一致)
-        """
+
         trend = self.moving_avg(x)                # [B,L,C]
         res = x - trend                           # [B,L,C]
         return res, trend
