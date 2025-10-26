@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from layers.RevIN import RevIN, RevINPlus,RAIN  # 引入实例归一化层 RevIN
+from layers.RevIN import RevIN, RevINPlus,RAIN  
 from layers.Autoformer_EncDec import series_decomp
 from layers.Autoformer_EncDec import series_decomp_learnable
 import torch.nn.functional as F         # for softplus, cos, etc.
@@ -219,12 +219,12 @@ class FEAM(nn.Module):
         self.dropout = configs.dropout
         self.seq_len = configs.seq_len
 
-        self.channelAggregator = nn.MultiheadAttention(embed_dim=self.d_model, num_heads=4, batch_first=True,dropout=0.5)  # 通道聚合模块
+        self.channelAggregator = nn.MultiheadAttention(embed_dim=self.d_model, num_heads=4, batch_first=True,dropout=0.5) 
         self.linear = nn.Sequential(nn.Dropout(self.dropout), nn.Linear(self.d_model, self.d_model), nn.GELU(), )
 
     def forward(self, x_input, I_oupled):
 
-        I_fused, _ = self.channelAggregator(query=I_oupled , key=x_input, value=x_input)  # 通道聚合操作
+        I_fused, _ = self.channelAggregator(query=I_oupled , key=x_input, value=x_input) 
         I_fused = self.linear(I_fused + x_input)
         return I_fused
 
@@ -247,7 +247,7 @@ class Model(nn.Module):
         x = self.revin_layer(x, mode='norm')
         x_input = x.permute(0, 2, 1)
 
-        # DCM 操作
+        # DCM 
         x_out, I_oupled = self.DCM(x_input)
         # FEAM
         FEAM_out = self.FEAM(x_out, I_oupled)
