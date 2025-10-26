@@ -52,30 +52,6 @@ class ZeroMeanPhaseCorrector(nn.Module):
         gate = torch.tanh(self.strength)
         return phase_unwrapped + gate * delta
 
-# Construct analytic signal (frequency-domain Hilbert)
-def analytic_signal_fft(x: torch.Tensor, time_dim: int = 1) -> torch.Tensor:
-    X = torch.fft.fft(x, dim=time_dim)
-    N = x.size(time_dim)
-    h = torch.zeros_like(X, dtype=X.real.dtype, device=X.device)
-
-    def sl(start, end):
-        idx = [slice(None)] * X.ndim
-        idx[time_dim] = slice(start, end)
-        return tuple(idx)
-
-    h[sl(0, 1)] = 1.0
-
-    if N % 2 == 0:
-        if N // 2 - 1 > 0:
-            h[sl(1, N // 2)] = 2.0
-        h[sl(N // 2, N // 2 + 1)] = 1.0
-    else:
-        if (N - 1) // 2 >= 1:
-            h[sl(1, (N + 1) // 2)] = 2.0
-
-    Z = torch.fft.ifft(X * h, dim=time_dim)
-    return Z
-
 # Torch implementation of phase unwrapping
 def phase_unwrap_torch(phase: torch.Tensor, time_dim: int = 1, discont: float = math.pi) -> torch.Tensor:
     d = torch.diff(phase, dim=time_dim)
