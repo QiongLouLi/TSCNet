@@ -160,7 +160,7 @@ class RevINPlus(nn.Module):
         device, dtype = x.device, x.dtype
         # weights in increasing time index (0..L-1)
         idx = torch.arange(L, device=device, dtype=dtype).view(1, L, 1)
-        w = (self.ema_alpha ** (L - 1 - idx))  # newer points weight larger if alpha<1 ? (可按需互换指数方向)
+        w = (self.ema_alpha ** (L - 1 - idx))  # newer points weight larger if alpha<1 ? 
         if mask is not None:
             cnt, valid = self._count_valid(mask, dim=1, keepdim=True)  # [B,1,C], [B,L,C]
             w = w * valid  # zero-out invalid
@@ -233,11 +233,10 @@ class RevINPlus(nn.Module):
         if self.lambda_logit is not None:
             lam = torch.sigmoid(self.lambda_logit).view(1, 1, C)
         else:
-            lam = x.new_ones((1,1,C))  # λ=1 → 完全归一化
+            lam = x.new_ones((1,1,C)) 
 
         x = (x - lam * center) / (lam * scale + self.eps)
 
-        # mask 区域置零（可换成前向填充/均值填充）
         if mask is not None:
             x = x.masked_fill(mask, 0.0)
 
@@ -260,7 +259,6 @@ class RevINPlus(nn.Module):
         if self.affine:
             w = self.affine_weight.view(1,1,C)
             b = self.affine_bias.view(1,1,C)
-            # 正确的反仿射（注意分母是 w + tiny，而不是 eps*eps）
             y = (y - b) / (w + 1e-8)
 
         x = y * (lam * scale + self.eps) + lam * center
