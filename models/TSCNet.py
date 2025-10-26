@@ -93,10 +93,6 @@ def phase_unwrap_torch(phase: torch.Tensor, time_dim: int = 1, discont: float = 
 
 # Trend–Seasonality Coupled module
 class TSCoupler(nn.Module):
-    r"""
-    Strict AM–FM coupling:
-      I(t) = α_c · f_β(T(t))_LP · cos(unwrap(φ_season(t)) ⊕ δφ(t) + φ0_c)
-    """
 
     def __init__(self,
                  dropout: float = 0.,
