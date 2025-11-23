@@ -257,12 +257,6 @@ class Exp_Main(Exp_Basic):
 
         best_model_path = path + '/' + 'checkpoint.pth'
         self.model.load_state_dict(torch.load(best_model_path))
-        # 先在 CPU 上加载，再放到目标 GPU
-        # state_dict = torch.load(best_model_path, map_location="cpu")
-        # self.model.load_state_dict(state_dict)
-        # 统一放到 self.device
-        # self.model.to(self.device)
-        # print(f"Max Memory (MB): {max_memory}")
         return self.model
 
     def test(self, setting, test=0):
