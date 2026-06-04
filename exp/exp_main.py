@@ -20,36 +20,9 @@ warnings.filterwarnings('ignore')
 
 
 
-class HeteroLaplace_loss(nn.Module):
-    def __init__(self, num_channels: int, alpha_init: float = 0.5, eps: float = 1e-6):
-        super().__init__()
-        self.eps = eps
-        self.log_sigma_c = nn.Parameter(torch.zeros(num_channels))
-        self.alpha_raw = nn.Parameter(torch.tensor(float(alpha_init)))
-        self._ln2 = math.log(2.0)
-
-    @torch.no_grad()
-    def calibrate_from_gt(self, gt: torch.Tensor):
-
-        median_t = gt.median(dim=1, keepdim=True).values  # (B,1,C)
-        mad = (gt - median_t).abs().median(dim=1, keepdim=True).values  # (B,1,C)
-        b_init = (mad / self._ln2).mean(dim=(0, 1)).clamp_min(self.eps)  # (C,)
-        self.log_sigma_c.data = torch.log(torch.expm1(b_init))  # softplus(log_sigma) ≈ b_init
-
-    def forward(self, pred: torch.Tensor, gt: torch.Tensor) -> torch.Tensor:
-        B, L, C = pred.shape
-        e = (pred - gt).abs()
-
-        device, dtype = pred.device, pred.dtype
-
-        l = torch.arange(1, L + 1, device=device, dtype=dtype).view(1, L, 1)
-        sigma_c = F.softplus(self.log_sigma_c).to(device=device, dtype=dtype).view(1, 1, C)
-        alpha = F.softplus(self.alpha_raw).to(device=device, dtype=dtype)
-
-        b = sigma_c * torch.pow(l, alpha) + self.eps
-
-        loss = e / b + torch.log(b)
-        return loss.mean()
+# class HeteroLaplace_loss(nn.Module):
+    # To preserve the integrity of the anonymous review process, the complete implementation is not publicly released at this stage. 
+    # The code can be made available to reviewers upon reasonable request via the official review or editorial channel.
 
 
 class Exp_Main(Exp_Basic):
