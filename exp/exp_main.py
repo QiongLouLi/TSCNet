@@ -20,7 +20,7 @@ warnings.filterwarnings('ignore')
 
 
 
-# class HeteroLaplace_loss(nn.Module):
+# class H_loss(nn.Module):
     # To preserve the integrity of the anonymous review process, the complete implementation is not publicly released at this stage. 
     # The code can be made available to reviewers upon reasonable request via the official review or editorial channel.
 
