@@ -118,7 +118,7 @@ class Exp_Main(Exp_Basic):
         early_stopping = EarlyStopping(patience=self.args.patience, verbose=True)
 
         model_optim = self._select_optimizer()
-        criterion = HeteroLaplace_loss(num_channels=self.args.loss_channels)
+        criterion = H_loss(num_channels=self.args.loss_channels)
         # criterion = WeightedL1Loss(self.args.lossfun_alpha, self.args.loss_mode)
 
         if self.args.use_amp:
