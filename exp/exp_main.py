@@ -20,9 +20,36 @@ warnings.filterwarnings('ignore')
 
 
 
-# class H_loss(nn.Module):
-    # To preserve the integrity of the anonymous review process, the complete implementation is not publicly released at this stage. 
-    # The code can be made available to reviewers upon reasonable request via the official review or editorial channel.
+class HeteroLaplace_loss(nn.Module):
+    def __init__(self, num_channels: int, alpha_init: float = 0.5, eps: float = 1e-6):
+        super().__init__()
+        self.eps = eps
+        self.log_sigma_c = nn.Parameter(torch.zeros(num_channels))
+        self.alpha_raw = nn.Parameter(torch.tensor(float(alpha_init)))
+        self._ln2 = math.log(2.0)
+
+    @torch.no_grad()
+    def calibrate_from_gt(self, gt: torch.Tensor):
+
+        median_t = gt.median(dim=1, keepdim=True).values  # (B,1,C)
+        mad = (gt - median_t).abs().median(dim=1, keepdim=True).values  # (B,1,C)
+        b_init = (mad / self._ln2).mean(dim=(0, 1)).clamp_min(self.eps)  # (C,)
+        self.log_sigma_c.data = torch.log(torch.expm1(b_init))  # softplus(log_sigma) ≈ b_init
+
+    def forward(self, pred: torch.Tensor, gt: torch.Tensor) -> torch.Tensor:
+        B, L, C = pred.shape
+        e = (pred - gt).abs()
+
+        device, dtype = pred.device, pred.dtype
+
+        l = torch.arange(1, L + 1, device=device, dtype=dtype).view(1, L, 1)
+        sigma_c = F.softplus(self.log_sigma_c).to(device=device, dtype=dtype).view(1, 1, C)
+        alpha = F.softplus(self.alpha_raw).to(device=device, dtype=dtype)
+
+        b = sigma_c * torch.pow(l, alpha) + self.eps
+
+        loss = e / b + torch.log(b)
+        return loss.mean()
 
 
 class Exp_Main(Exp_Basic):
@@ -48,8 +75,9 @@ class Exp_Main(Exp_Basic):
         return model_optim
 
     def _select_criterion(self):
-        criterion = nn.MSELoss()
-        return criterion
+        criterion_mse = nn.MSELoss()
+        criterion_mae = nn.L1Loss()
+        return criterion_mse, criterion_mae
 
     def vali(self, vali_data, vali_loader, criterion):
         total_loss = []
@@ -118,8 +146,8 @@ class Exp_Main(Exp_Basic):
         early_stopping = EarlyStopping(patience=self.args.patience, verbose=True)
 
         model_optim = self._select_optimizer()
-        criterion = H_loss(num_channels=self.args.loss_channels)
-        # criterion = WeightedL1Loss(self.args.lossfun_alpha, self.args.loss_mode)
+        criterion = self._select_criterion()[0]   # L1 loss and MSE loss
+        # criterion = HeteroLaplace_loss(num_channels=self.args.loss_channels)
 
         if self.args.use_amp:
             scaler = torch.cuda.amp.GradScaler()
@@ -228,8 +256,14 @@ class Exp_Main(Exp_Basic):
             else:
                 print('Updating learning rate to {}'.format(scheduler.get_last_lr()[0]))
 
+        # best_model_path = path + '/' + 'checkpoint.pth'
+        # self.model.load_state_dict(torch.load(best_model_path))
         best_model_path = path + '/' + 'checkpoint.pth'
-        self.model.load_state_dict(torch.load(best_model_path))
+        # self.model.load_state_dict(torch.load(best_model_path))
+        state_dict = torch.load(best_model_path, map_location='cpu')
+        self.model.load_state_dict(state_dict)
+        self.model.to(self.device)
+
         return self.model
 
     def test(self, setting, test=0):
@@ -333,7 +367,7 @@ class Exp_Main(Exp_Basic):
         mae, mse, rmse, mape, mspe, rse, corr = metric(preds, trues)
         # mae, mse, rmse, mape, mspe, rse, corr = metric(denorm_preds, denorm_trues)
 
-        print('mse:{}, mae:{}'.format(mse, mae))
+        print('\n mse:{}, mae:{}\n'.format(mse, mae))
         f = open("result.txt", 'a')
         f.write(setting + "  \n")
         f.write('mse:{}, mae:{}'.format(mse, mae))
@@ -407,5 +441,3 @@ class Exp_Main(Exp_Basic):
         np.save(folder_path + 'real_prediction.npy', preds)
 
         return
-
-
