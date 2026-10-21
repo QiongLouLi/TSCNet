@@ -31,6 +31,7 @@ The `checkpoints/` directory provides model checkpoints trained with different l
 
 These checkpoints can be used for direct evaluation or for verifying the experimental results reported in the manuscript.
 
-## Anonymous Review Statement
 
-This repository is prepared for double-blind review. It does not contain author names, affiliations, email addresses, personal webpages, or other identifying information.
+## Contact Information
+
+If you have any questions, please contact Ziqiong Li from the School of Mathematics and Statistics at Central South University at qionglouyuyu@csu.edu.cn.
