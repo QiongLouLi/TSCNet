@@ -1,6 +1,7 @@
 # TSCNet
 
-This repository provides the anonymous implementation of **TSCNet** for reproducibility during the double-blind review process.
+This repository provides the anonymous implementation of **TSCNet: A Trend–Seasonality Coupled Network for
+Efficient Multivariate Time Series Forecasting** 
 
 ## Main Contents
 
