@@ -17,7 +17,7 @@ This repository is the official implementation of the paper **TSCNet: A Trend–
 - **Strong performance**: outperforms mainstream baselines on public benchmarks including ETT, Weather, Electricity, and Traffic.
 
 ![TSCNet framework](models/Fig.png)
-
+ 
 ## Repository Contents
 
 This repository provides the model code, experimental configurations, and model checkpoints. The directory structure is as follows:
