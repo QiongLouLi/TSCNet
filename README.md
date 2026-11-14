@@ -56,12 +56,16 @@ These checkpoints can be used for direct evaluation or for reproducing the exper
 If you find this repository useful for your research, please consider citing our paper:
 
 ```bibtex
-@article{tscnet,
-  title   = {TSCNet: A Trend--Seasonality Coupled Network for Efficient Multivariate Time Series Forecasting},
-  author  = {Li, Ziqiong and ...},
-  journal = {IEEE Transactions on Neural Networks and Learning Systems},
-  year    = {2026}
-}
+@ARTICLE{11698844,
+  author={Li, Ziqiong and Chai, Heyu and Liu, Xinru and Liu, Shengjun},
+  journal={IEEE Transactions on Neural Networks and Learning Systems}, 
+  title={TSCNet: A Trend–Seasonality Coupled Network for Efficient Multivariate Time Series Forecasting}, 
+  year={2026},
+  volume={},
+  number={},
+  pages={1-14},
+  keywords={Modeling;Forecasting;Timing;Joining processes;Frequency;Sequences;Sequential analysis;Couplings;Low-pass filters;Transforms;Attention;frequency;Hilbert;phase;time series forecasting},
+  doi={10.1109/TNNLS.2026.3729311}}
 ```
 
 ## Contact
