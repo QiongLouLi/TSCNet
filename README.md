@@ -16,7 +16,7 @@ This repository is the official implementation of the paper **TSCNet: A Trend–
 - **Lightweight design**: few parameters and fast inference, suitable for efficiency-sensitive scenarios;
 - **Strong performance**: outperforms mainstream baselines on public benchmarks including ETT, Weather, Electricity, and Traffic.
 
-![PARCNet framework](models/Fig.png)
+![TSCNet framework](models/Fig.png)
 
 ## Repository Contents
 
